@@ -1,8 +1,12 @@
 [package]
 name = "fortis-multisig-cli"
+readme = "README.md"
 version = "0.1.0"
 edition = "2021"
+homepage="https://github.com/Fortis-labs/fortis-cli"
+repository ="https://github.com/Fortis-labs/fortis-cli"
 description = "Command line interface to interact with the Fortis program."
+license-file = "LICENSE"
 
 [dependencies]
 # ── Async / Runtime ─────────────────────────────────────────────
