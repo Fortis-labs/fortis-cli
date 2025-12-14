@@ -1,8 +1,3 @@
-use clap::Args;
-use colored::Colorize;
-use dialoguer::Confirm;
-use indicatif::ProgressBar;
-
 // ─────────────────────────────
 // Standard library
 // ─────────────────────────────
@@ -10,14 +5,21 @@ use std::str::FromStr;
 use std::time::Duration;
 
 // ─────────────────────────────
-// Solana SDK
+// CLI / UX
 // ─────────────────────────────
-use solana_client::nonblocking::rpc_client::RpcClient;
+use clap::Args;
+use colored::Colorize;
+use dialoguer::Confirm;
+use indicatif::ProgressBar;
+
+// ─────────────────────────────
+// Solana SDK & Programs
+// ─────────────────────────────
 use solana_compute_budget_interface::ComputeBudgetInstruction;
 use solana_sdk::{
     message::{v0::Message, VersionedMessage},
     pubkey::Pubkey,
-    signature::{Keypair, Signer},
+    signature::Signer,
     transaction::VersionedTransaction,
 };
 use solana_system_interface::program::ID as SYS_PROGRAM_ID;
@@ -26,48 +28,59 @@ use solana_system_interface::program::ID as SYS_PROGRAM_ID;
 // Fortis SDK
 // ─────────────────────────────
 use fortis_sdk::{
-    client::multisig_create,
-    pda::{get_multisig_pda, FORTIS_PROGRAM_ID},
-    state::{MultisigCreateAccounts, MultisigCreateArgs},
+    client::{get_multisig, proposal_create},
+    pda::{get_proposal_pda, get_transaction_pda, get_vault_pda, FORTIS_PROGRAM_ID},
+    state::{ProposalCreateAccounts, VaultTransactionMessage},
 };
 
 // ─────────────────────────────
-// Local utilities
+// RPC
+// ─────────────────────────────
+use solana_client::nonblocking::rpc_client::RpcClient;
+
+// ─────────────────────────────
+// Local utils
 // ─────────────────────────────
 use crate::utils::{create_signer_from_path, send_and_confirm_transaction};
-//this command can only be used ,if a rent_collector has been set previously
+
 #[derive(Args)]
-pub struct MultisigCreate {
+pub struct InitiateNativeTransfer {
     /// RPC URL
     #[arg(long)]
     rpc_url: Option<String>,
 
-    /// Path to the Multisig Creator
+    #[arg(long)]
+    token_amount_u64: u64,
+
+    /// The recipient of the Token(s)
+    #[arg(long)]
+    recipient: String,
+
+    /// Path to the Proposal Creator Keypair
     #[arg(long)]
     keypair: String,
 
+    /// The multisig where the transaction has been proposed
     #[arg(long)]
-    rent_collector: Option<Pubkey>,
-
-    #[arg(long, short, value_delimiter = ' ')]
-    members: Vec<String>,
+    multisig_pubkey: String,
 
     #[arg(long)]
-    threshold: u8,
+    voting_deadline: u64,
 
     #[arg(long)]
     priority_fee_lamports: Option<u64>,
 }
 
-impl MultisigCreate {
+impl InitiateNativeTransfer {
     pub async fn execute(self) -> eyre::Result<()> {
         let Self {
             rpc_url,
             keypair,
-            members,
-            threshold,
-            rent_collector,
+            multisig_pubkey,
+            voting_deadline,
             priority_fee_lamports,
+            token_amount_u64,
+            recipient,
         } = self;
 
         let transaction_creator_keypair = create_signer_from_path(keypair).unwrap();
@@ -75,32 +88,33 @@ impl MultisigCreate {
         let transaction_creator = transaction_creator_keypair.pubkey();
 
         let rpc_url = rpc_url.unwrap_or_else(|| "https://api.mainnet-beta.solana.com".to_string());
+        let rpc_url_clone = rpc_url.clone();
+        let rpc_client = &RpcClient::new(rpc_url);
 
-        let members = parse_members(members).unwrap_or_else(|err| {
-            eprintln!("Error parsing members: {}", err);
-            std::process::exit(1);
-        });
+        let multisig = Pubkey::from_str(&multisig_pubkey).expect("Invalid multisig address");
 
+        let recipient_pubkey = Pubkey::from_str(&recipient).expect("Invalid recipient address");
+
+        let multisig_data = get_multisig(rpc_client, &multisig).await?;
+
+        let transaction_index = multisig_data.transaction_index + 1;
+
+        let transaction_pda = get_transaction_pda(&multisig, transaction_index, None);
+        let proposal_pda = get_proposal_pda(&multisig, transaction_index, None);
         println!();
         println!(
             "{}",
-            "👀 You're about to create a multisig, please review the details:".yellow()
+            "👀 You're about to create a vault transaction, please review the details:".yellow()
         );
         println!();
-        println!("RPC Cluster URL:   {}", rpc_url);
+        println!("RPC Cluster URL:   {}", rpc_url_clone);
         println!("Program ID:        {}", FORTIS_PROGRAM_ID.to_string());
         println!("Your Public Key:       {}", transaction_creator);
         println!();
         println!("⚙️ Config Parameters");
-        println!();
-        println!("Threshold:          {}", threshold);
-        println!(
-            "Rent Collector:     {}",
-            rent_collector
-                .map(|k| k.to_string())
-                .unwrap_or_else(|| "None".to_string())
-        );
-        println!("Members amount:      {}", members.len());
+        println!("Multisig Key:       {}", multisig_pubkey);
+        println!("Transaction Index:       {}", transaction_index);
+        println!("Voting deadline:       {}", voting_deadline);
         println!();
 
         let proceed = Confirm::new()
@@ -113,8 +127,6 @@ impl MultisigCreate {
         }
         println!();
 
-        let rpc_client = RpcClient::new(rpc_url);
-
         let progress = ProgressBar::new_spinner().with_message("Sending transaction...");
         progress.enable_steady_tick(Duration::from_millis(100));
 
@@ -123,28 +135,36 @@ impl MultisigCreate {
             .await
             .expect("Failed to get blockhash");
 
-        let random_keypair = Keypair::new();
+        let vault_pda = get_vault_pda(&multisig, None);
 
-        let multisig_key = get_multisig_pda(&random_keypair.pubkey(), None);
+        let transfer_message = VaultTransactionMessage::try_compile(
+            &vault_pda.0,
+            &[solana_system_interface::instruction::transfer(
+                &&vault_pda.0,
+                &recipient_pubkey,
+                token_amount_u64,
+            )],
+            &[],
+        )
+        .unwrap();
+
         let message = Message::try_compile(
             &transaction_creator,
             &[
                 ComputeBudgetInstruction::set_compute_unit_price(
-                    priority_fee_lamports.unwrap_or(5000),
+                    priority_fee_lamports.unwrap_or(200_000),
                 ),
-                multisig_create(
-                    MultisigCreateAccounts {
-                        create_key: random_keypair.pubkey(),
+                proposal_create(
+                    ProposalCreateAccounts {
+                        multisig,
+                        trasaction: transaction_pda.0,
                         creator: transaction_creator,
-                        multisig: multisig_key.0,
+                        proposal: proposal_pda.0,
                         system_program: SYS_PROGRAM_ID,
-                        treasury: fortis_sdk::pda::TREASURY,
                     },
-                    MultisigCreateArgs {
-                        members,
-                        threshold,
-                        rent_collector,
-                    },
+                    0,
+                    &transfer_message,
+                    voting_deadline as i64,
                     None,
                 ),
             ],
@@ -155,27 +175,16 @@ impl MultisigCreate {
 
         let transaction = VersionedTransaction::try_new(
             VersionedMessage::V0(message),
-            &[
-                &*transaction_creator_keypair,
-                &random_keypair as &dyn Signer,
-            ],
+            &[&*transaction_creator_keypair],
         )
         .expect("Failed to create transaction");
 
         let signature = send_and_confirm_transaction(&transaction, &rpc_client).await?;
 
         println!(
-            "✅ Created Multisig: {}. Signature: {}",
-            multisig_key.0,
+            "✅ Transaction created successfully. Signature: {}",
             signature.green()
         );
         Ok(())
     }
-}
-
-fn parse_members(member_strings: Vec<String>) -> Result<Vec<Pubkey>, String> {
-    member_strings
-        .into_iter()
-        .map(|s| Pubkey::from_str(&s).map_err(|_| format!("Invalid public key: {}", s)))
-        .collect()
 }

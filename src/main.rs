@@ -20,6 +20,7 @@ async fn main() -> eyre::Result<()> {
         Command::ProposalCreate(command) => command.execute().await,
         Command::ProposalAccountsClose(command) => command.execute().await,
         Command::InitiateTransfer(command) => command.execute().await,
+        Command::InitiateNativeTransfer(command) => command.execute().await,
         Command::InitiateProgramUpgrade(command) => command.execute().await,
         Command::DisplayVault(command) => command.execute().await,
     }

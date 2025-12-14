@@ -21,7 +21,7 @@ eyre = "0.6.12"
 borsh = "1.6.0"
 
 # ── Fortis SDK ──────────────────────────────────────────────────
-fortis_sdk = "1.0.2"
+fortis_sdk = "1.0.3"
 
 # ── Solana Core SDK & Client ────────────────────────────────────
 solana-sdk = "3.0.0"
@@ -32,7 +32,7 @@ solana-message = "3.0.0"
 solana-clap-v3-utils = "3.0.0"
 
 # ── Solana Program Interfaces ───────────────────────────────────
-solana-system-interface = "3.0.0"
+solana-system-interface = { version = "3.0.0", features = ["bincode"] }
 solana-compute-budget-interface = "3.0.0"
 solana-address-lookup-table-interface = { version = "2.2.1", features = ["bytemuck", "bincode"] }
 solana-loader-v3-interface = { version = "6.1.0", features = ["bincode"] }
