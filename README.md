@@ -1,3 +1,14 @@
+<h1 align="center">
+  Fortis sdk
+</h1>
+<p align="center">
+<img width="500" height="394" alt="logo1" src="https://github.com/user-attachments/assets/6e48acf5-e9c7-4435-9ef5-88b1710f848c" />
+</p>
+<p align="center">
+cli for fortis multisig.
+</p>
+Fortis multisig cli is an extesive toolkit to support multisig proposal workflows on SVM
+
 # Fortis CLI
 
 The following is an overview of commands available to interact Fortis Multisig Cli.
