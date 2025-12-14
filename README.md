@@ -1,5 +1,5 @@
 <h1 align="center">
-  Fortis sdk
+  Fortis cli
 </h1>
 <p align="center">
 <img width="500" height="394" alt="logo1" src="https://github.com/user-attachments/assets/6e48acf5-e9c7-4435-9ef5-88b1710f848c" />
