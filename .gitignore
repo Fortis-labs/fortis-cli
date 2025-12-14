@@ -1,0 +1,14 @@
+# Rust
+/target/
+**/target/
+
+# Lock files (for binaries / CLIs)
+Cargo.lock
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Env
+.env

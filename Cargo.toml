@@ -1,0 +1,45 @@
+[package]
+name = "fortis-multisig-cli"
+version = "0.1.0"
+edition = "2021"
+description = "Command line interface to interact with the Fortis program."
+
+[dependencies]
+# ── Async / Runtime ─────────────────────────────────────────────
+tokio = { version = "1.48.0", features = ["rt", "rt-multi-thread", "macros"] }
+
+# ── CLI / UX ────────────────────────────────────────────────────
+clap = { version = "4.5.53", features = ["derive"] }
+clap_v3 = { package = "clap", version = "3.0" }
+
+dialoguer = "0.12.0"
+indicatif = "0.18.3"
+colored = "3.0.0"
+
+# ── Error Handling / Serialization ──────────────────────────────
+eyre = "0.6.12"
+borsh = "1.6.0"
+
+# ── Fortis SDK ──────────────────────────────────────────────────
+fortis_sdk = "1.0.2"
+
+# ── Solana Core SDK & Client ────────────────────────────────────
+solana-sdk = "3.0.0"
+solana-client = "3.0.0"
+solana-message = "3.0.0"
+
+# ── Solana CLI Utilities ────────────────────────────────────────
+solana-clap-v3-utils = "3.0.0"
+
+# ── Solana Program Interfaces ───────────────────────────────────
+solana-system-interface = "3.0.0"
+solana-compute-budget-interface = "3.0.0"
+solana-address-lookup-table-interface = { version = "2.2.1", features = ["bytemuck", "bincode"] }
+solana-loader-v3-interface = { version = "6.1.0", features = ["bincode"] }
+
+# ── Solana Loader Programs ──────────────────────────────────────
+solana-bpf-loader-program = "3.1.4"
+
+# ── SPL ─────────────────────────────────────────────────────────
+spl-token = "9.0.0"
+spl-associated-token-account = "8.0.0"
