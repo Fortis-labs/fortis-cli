@@ -53,7 +53,7 @@ pub struct MultisigCreate {
     members: Vec<String>,
 
     #[arg(long)]
-    threshold: u8,
+    threshold: u16,
 
     #[arg(long)]
     priority_fee_lamports: Option<u64>,

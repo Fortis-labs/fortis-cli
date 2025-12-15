@@ -23,5 +23,6 @@ async fn main() -> eyre::Result<()> {
         Command::InitiateNativeTransfer(command) => command.execute().await,
         Command::InitiateProgramUpgrade(command) => command.execute().await,
         Command::DisplayVault(command) => command.execute().await,
+        Command::DisplayMultisig(command) => command.execute().await,
     }
 }
