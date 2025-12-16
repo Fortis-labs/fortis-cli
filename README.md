@@ -24,6 +24,8 @@ Overview
    - [Proposal execute](#proposal-execute)
    - [Proposal accounts close](#proposal-accounts-close)
    - [Display Vault](#display-vault)
+   - [Display Multisig](#display-multisig)
+   - [Initiate Native transfer](#initiate-native-transfer)
 
 # 1. Installation
 
@@ -264,3 +266,25 @@ Multisig vault: 7npNuK6LjWehkTbg768yd5vXwstPF9V4i6Gu6rULWSWV
   Status      : Active
 
 ```
+## Initiate Native transfer
+
+### Description
+
+Create a new  sol transfer proposal. This command allows any member of a multisig to propose a transaction.
+
+### Syntax
+
+```bash
+initiate-native-transfer --rpc_url <RPC_URL>  --keypair <KEYPAIR_PATH> --multisig-pubkey <MULTISIG_PUBLIC_KEY> --voting-deadline <VOTING_DEADLINE> --recipient <RECIPIENT_PUBLIC_KEY> --token-amount-u64 <LAMPORTS_TO_TRANSFER>
+```
+
+### Parameters
+
+- `--rpc-url <RPC_URL>`: (Optional) The URL of the Solana RPC endpoint. Defaults to mainnet if not specified.
+- `--keypair <KEYPAIR_PATH>`: Path to your keypair file.
+- `--multisig-pubkey <MULTISIG_PUBLIC_KEY>`: The public key of the multisig account.
+- `--voting-deadline <VOTING_DEADLINE>`: voting deadline for proposal ,should be i64 ,same as unix time format.
+- `--recipient <RECIPIENT_PUBLIC_KEY>`: The public key of the recipient account.
+- `--token-amount-u64 <LAMPORTS_TO_TRANSFER>`: lamports to transfer.
+
+
