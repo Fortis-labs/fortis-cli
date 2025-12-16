@@ -19,10 +19,11 @@ Overview
 2. [Supported wallets](#2-supported-wallets)
 3. [Commands](#3-commands)
    - [Create multisig](#multisig-create)
-   - [Vote on proposals](#proposal-vote)
-   - [Reclaim Vault Transaction rent](#vault-transaction-accounts-close)
-   - [Create new Vault Transaction](#vault-transaction-create)
-   - [Execute Vault Transaction](#vault-transaction-execute)
+   - [Create proposal](#proposal-create)
+   - [Proposal approve](#proposal-approve)
+   - [Proposal execute](#proposal-execute)
+   - [Proposal accounts close](#proposal-accounts-close)
+   - [Display Vault](#display-vault)
 
 # 1. Installation
 
@@ -76,7 +77,7 @@ Creates a new multisig with members and threshold configuration.
 ### Syntax
 
 ```bash
-multisig-create --rpc-url <RPC_URL> --keypair <KEYPAIR_PATH> --rent-collector <RENT_COLLECTOR> --members <MEMBER_1> <MEMBER_2> ... --threshold <THRESHOLD>
+multisig-create --rpc-url <RPC_URL> --keypair <KEYPAIR_PATH> --rent-collector <RENT_COLLECTOR> --members " <MEMBER_1_PUBKEY> <MEMBER_2_PUBKEY> ..." --threshold <THRESHOLD>
 ```
 
 ### Parameters
@@ -85,16 +86,43 @@ multisig-create --rpc-url <RPC_URL> --keypair <KEYPAIR_PATH> --rent-collector <R
 - `--keypair <KEYPAIR_PATH>`: Path to your keypair file.
 - `--members <MEMBER_...>`: List of members' public keys, separated by spaces.
 - `--threshold <THRESHOLD>`: The threshold number of signatures required for executing multisig transactions.
-- `--rent-collector <RENT_COLLECTOR>` : The Public key that will be able to reclaim rent from canceled and executed transactions.
+- `--rent-collector <RENT_COLLECTOR>` : (Optional)The Public key that will be able to reclaim rent from canceled and executed transactions.if not provided will default to Fortis treasury
 
 ### Example Usage
 
 
    ```bash
-   multisig-create --keypair /path/to/keypair.json --members "Member1PubKey" "Member2PubKey" --threshold 2 --rent-collector <RENT_COLLECTOR>
+   multisig-create --keypair /path/to/keypair.json --members" Member1PubKey Member2PubKey" --threshold 2 --rent-collector <RENT_COLLECTOR>
    ```
 
    Creates a new multisig account with two members and a threshold of 2.
+
+## Proposal Create
+
+### Description
+
+Create a new  proposal. This command allows any member of a multisig to propose a transaction.
+
+### Syntax
+
+```bash
+proposal-create --rpc_url <RPC_URL>  --keypair <KEYPAIR_PATH> --multisig-pubkey <MULTISIG_PUBLIC_KEY> --voting-deadline <VOTING_DEADLINE> --transaction-meesage <TRANSACTION_PAYLOAD> 
+```
+
+### Parameters
+
+- `--rpc-url <RPC_URL>`: (Optional) The URL of the Solana RPC endpoint. Defaults to mainnet if not specified.
+- `--keypair <KEYPAIR_PATH>`: Path to your keypair file.
+- `--multisig-pubkey <MULTISIG_PUBLIC_KEY>`: The public key of the multisig account.
+- `--voting-deadline <VOTING_DEADLINE>`: voting deadline for proposal ,should be i64 ,same as unix time format.
+- `--transaction-message <TRANSACTION_PAYLOAD>`: transaction message proposal encoded as a base58 string.Serialize your VaultTransactionMessage into Vec<u8>, then encode the bytes as a base58 string.
+
+### Example Usage
+
+   ```bash
+   proposal-create --keypair /path/to/keypair.json --multisig-pubkey <MULTISIG_PUBLIC_KEY> --transaction-message abc... --voting-deadline 175978512685
+   ```
+
 
 ## Proposal Approve
 
@@ -113,68 +141,13 @@ proposal-approve --rpc_url <RPC_URL>  --keypair <KEYPAIR_PATH> --multisig-pubkey
 - `--rpc-url <RPC_URL>`: (Optional) The URL of the Solana RPC endpoint. Defaults to mainnet if not specified.
 - `--keypair <KEYPAIR_PATH>`: Path to your keypair file.
 - `--multisig-pubkey <MULTISIG_PUBLIC_KEY>`: The public key of the multisig account.
-- `--transaction-index <TRANSACTION_INDEX>`: The index of the transaction to vote on.
+- `--transaction-index <TRANSACTION_INDEX>`: The index of the proposal (technically transaction) to vote on.
 
 ### Example Usage
 
    ```bash
-   proposal-approve --keypair /path/to/keypair.json --multisig-pubkey <MULTISIG_PUBLIC_KEY> --transaction_index 1 --action Approve
+   proposal-approve --keypair /path/to/keypair.json --multisig-pubkey <MULTISIG_PUBLIC_KEY> --transaction_index 1 
    ```
-
-## Proposal Accounts Close
-
-### Description
-
-Closes the proposal and transaction accounts associated with a specific Proposal. The rent will be returned to the multisigs "rent_collector".
-
-### Syntax
-
-```bash
-proposal-accounts-close --rpc_url <RPC_URL> --keypair <KEYPAIR_PATH> --multisig-pubkey <MULTISIG_PUBLIC_KEY> --transaction-index <TRANSACTION_INDEX> --rent-collector <RENT_COLLECTOR_PUBKEY>
-```
-
-### Parameters
-
-- `--rpc-url <RPC_URL>`: (Optional) The URL of the Solana RPC endpoint. Defaults to mainnet if not specified.
-- `--keypair <KEYPAIR_PATH>`: Path to your keypair file.
-- `--multisig-pubkey <MULTISIG_PUBLIC_KEY>`: The public key of the multisig account.
-- `--transaction-index <TRANSACTION_INDEX>`: The index of the transaction whose accounts are to be closed.
-- `--rent-collector <RENT_COLLECTOR_PUBKEY>`: The public key of the account responsible for collecting rent.
-
-### Example Usage
-
-```bash
-proposal-accounts-close --keypair /path/to/keypair.json --multisig-pubkey <MULTISIG_PUBLIC_KEY> --transaction-index 1 --rent-collector <RENT_COLLECTOR_PUBKEY>
-```
-
-In this example, the command closes the proposal accounts for the transaction at index 1 in the specified multisig account and collects rent using the provided rent collector public key.
-
-## Proposal Create
-
-### Description
-
-Creates a new proposal with a custom transaction message.
-
-### Syntax
-
-```bash
-proposal-create --rpc-url <RPC_URL>  --keypair <KEYPAIR_PATH> --multisig-pubkey <MULTISIG_PUBLIC_KEY> --transaction-message <TRANSACTION_MESSAGE>
-```
-
-### Parameters
-
-- `--rpc-url <RPC_URL>`: (Optional) The URL of the Solana RPC endpoint. Defaults to mainnet if not specified.
-- `--keypair <KEYPAIR_PATH>`: Path to your keypair file.
-- `--multisig-pubkey <MULTISIG_PUBLIC_KEY>`: The public key of the multisig account.
-- `--transaction-message <TRANSACTION_MESSAGE>`: The message or payload of the transaction.
-
-### Example Usage
-
-```bash
-proposal-create --keypair /path/to/keypair.json --multisig-pubkey <MULTISIG_PUBLIC_KEY> --vault-index 1 --transaction-message [1, 2, 3, 5, 5, 6, 7, 8]
-```
-
-In this example, a new transaction with the specified message is proposed in the multisig vault.
 
 ## Proposal Execute
 
@@ -193,12 +166,101 @@ proposal-execute --rpc-url <RPC_URL> --keypair <KEYPAIR_PATH> --multisig-pubkey 
 - `--rpc-url <RPC_URL>`: (Optional) The URL of the Solana RPC endpoint. Defaults to mainnet if not specified.
 - `--keypair <KEYPAIR_PATH>`: Path to your keypair file.
 - `--multisig-pubkey <MULTISIG_PUBLIC_KEY>`: The public key of the multisig account.
-- `--transaction-index <TRANSACTION_INDEX>`: The index of the transaction to be executed.
+- `--transaction-index <TRANSACTION_INDEX>`: The index of the proposal (technically transaction) to execute.
 
 ### Example Usage
 
 ```bash
-vault-transaction-execute --keypair /path/to/keypair.json --multisig-pubkey <MULTISIG_PUBLIC_KEY> --transaction-index 1
+proposal-execute --keypair /path/to/keypair.json --multisig-pubkey <MULTISIG_PUBLIC_KEY> --transaction-index 1
 ```
 
 This example executes the proposal at index 1 in the specified multisig.
+
+
+## Proposal Accounts Close
+
+### Description
+
+Closes the proposal and transaction accounts associated with a specific Proposal. The rent will be returned to the multisigs "rent_collector".
+
+### Syntax
+
+```bash
+proposal-accounts-close --rpc_url <RPC_URL> --keypair <KEYPAIR_PATH> --multisig-pubkey <MULTISIG_PUBLIC_KEY> --transaction-index <TRANSACTION_INDEX> --rent-collector <RENT_COLLECTOR_PUBKEY>
+```
+
+### Parameters
+
+- `--rpc-url <RPC_URL>`: (Optional) The URL of the Solana RPC endpoint. Defaults to mainnet if not specified.
+- `--keypair <KEYPAIR_PATH>`: Path to your keypair file.
+- `--multisig-pubkey <MULTISIG_PUBLIC_KEY>`: The public key of the multisig account.
+- `--transaction-index <TRANSACTION_INDEX>`: The index of the proposal (technically transaction) whose accounts are to be closed.
+- `--rent-collector <RENT_COLLECTOR_PUBKEY>`: The public key of the account responsible for collecting rent.
+
+### Example Usage
+
+```bash
+proposal-accounts-close --keypair /path/to/keypair.json --multisig-pubkey <MULTISIG_PUBLIC_KEY> --transaction-index 1 --rent-collector <RENT_COLLECTOR_PUBKEY>
+```
+
+In this example, the command closes the proposal accounts for the transaction at index 1 in the specified multisig account and collects rent using the provided rent collector public key.
+## Display Vault
+
+### Description
+
+View vault associated to your multisig
+
+### Syntax
+
+```bash
+display-vault --multisig-address <MULTISIG_PUBLIC_KEY>
+```
+
+### Parameters
+
+- `--multisig-address <MULTISIG_PUBLIC_KEY>`: The public key of the multisig account.
+
+## Display Multisig
+
+### Description
+
+View all info on your multisig
+
+### Syntax
+
+```bash
+display-multisig --rpc_url <RPC_URL> --multisig-address <MULTISIG_PUBLIC_KEY>
+```
+
+### Parameters
+- `--rpc-url <RPC_URL>`: (Optional) The URL of the Solana RPC endpoint. Defaults to mainnet if not specified.
+- `--multisig-address <MULTISIG_PUBLIC_KEY>`: The public key of the multisig account.
+
+### Example Usage
+
+```bash
+display-multisig --multisig-address <MULTISIG_PUBLIC_KEY>
+```
+```console
+# Example Output
+Multisig address: 2C5tyVLDnJ4QhL5xkFb8dvrAKZDakFNmUHM8T9jWoSNf
+Multisig creator: 4YbfMWzXz29tAs9W8y5h98c3PW3ruGZbDg1E1zB73DVJ
+Rent collector: ap5oPFPVSnxtc8bbvcCeKwy9Xnu5NePhMGzX2hexDVh
+Proposals count: 1
+Multisig threshold: 1
+Multisig members:
+[
+    ap5oPFPVSnxtc8bbvcCeKwy9Xnu5NePhMGzX2hexDVh,
+    AgZ9okAAA7sHz6ddJnuq6RFHXuEQZt3CgBZsNGHByjq5,
+]
+Multisig vault: 7npNuK6LjWehkTbg768yd5vXwstPF9V4i6Gu6rULWSWV
+
+▶ Proposal #1
+  Address     : 69sJ9DLxTL76cGnGSrVpMHRRsrdW3ZFs28YmbekGi4g6
+  Created At  : 1765812709
+  Deadline    : 1766664125
+  Approvals   : 0/1
+  Approvers   : None
+  Status      : Active
+
+```
