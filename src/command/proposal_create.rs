@@ -55,9 +55,9 @@ pub struct ProposalCreate {
 
     #[arg(long)]
     voting_deadline: u64,
-
+    ///transaction message in bs58 format (VaultTransactionMessage->Vec<u8>->bs58_string)
     #[arg(long)]
-    transaction_message: Vec<u8>,
+    transaction_message: String,
 
     #[arg(long)]
     priority_fee_lamports: Option<u64>,
@@ -123,8 +123,11 @@ impl ProposalCreate {
             .get_latest_blockhash()
             .await
             .expect("Failed to get blockhash");
+        let transaction_message_vec = bs58::decode(transaction_message)
+            .into_vec()
+            .expect("erro dedcoding transaction message");
         let transaction_message: VaultTransactionMessage =
-            borsh::from_slice(&transaction_message).unwrap();
+            borsh::from_slice(&transaction_message_vec).unwrap();
 
         let message = Message::try_compile(
             &transaction_creator,
