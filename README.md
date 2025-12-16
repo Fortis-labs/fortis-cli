@@ -26,6 +26,7 @@ Overview
    - [Display Vault](#display-vault)
    - [Display Multisig](#display-multisig)
    - [Initiate Native transfer](#initiate-native-transfer)
+   - [Initiate Program Upgrade](#initiate-program-upgrade)
 
 # 1. Installation
 
@@ -287,4 +288,47 @@ initiate-native-transfer --rpc_url <RPC_URL>  --keypair <KEYPAIR_PATH> --multisi
 - `--recipient <RECIPIENT_PUBLIC_KEY>`: The public key of the recipient account.
 - `--token-amount-u64 <LAMPORTS_TO_TRANSFER>`: lamports to transfer.
 
+## Initiate transfer
+
+### Description
+
+Create a new  spl-token transfer proposal. This command allows any member of a multisig to propose a transaction.
+
+### Syntax
+
+```bash
+initiate-transfer --rpc-url <RPC_URL>  --token-mint-address <TOKEN_MINT> --token-amount-u64 <AMOUNT_IN_SMALLEST_UNITS> --recipient <RECIPIENT_PUBKEY> --keypair <KEYPAIR_PATH> --multisig-pubkey <MULTISIG_PUBKEY> --voting-deadline <VOTING_DEADLINE> 
+```
+
+### Parameters
+
+- `--rpc-url <RPC_URL>`: (Optional) The URL of the Solana RPC endpoint. Defaults to mainnet if not specified.
+- `--keypair <KEYPAIR_PATH>`: Path to your keypair file.
+- `--multisig-pubkey <MULTISIG_PUBLIC_KEY>`: The public key of the multisig account.
+- `--token-mint-address <TOKEN_MINT>`: Token Mint
+- `--voting-deadline <VOTING_DEADLINE>`: voting deadline for proposal ,should be i64 ,same as unix time format.
+- `--recipient <RECIPIENT_PUBLIC_KEY>`: The public key of the recipient account.
+- `--token-amount-u64 <LAMPORTS_TO_TRANSFER>`: amount to transfer.
+
+## Initiate Program Upgrade
+
+### Description
+
+Create a proposal to uprade program. This command allows any member of a multisig to propose a transaction.
+
+### Syntax
+
+```bash
+initiate-program-upgrade --rpc-url <RPC_URL> --keypair <KEYPAIR_PATH>  --multisig-pubkey <MULTISIG_PUBKEY> --voting-deadline <VOTING_DEADLINE> --spill-address <SPILL_ADDRESS> --program-to-upgrade-id <PROGRAM_ID> --buffer-address <BUFFER_ADDRESS>
+```
+
+### Parameters
+
+- `--rpc-url <RPC_URL>`: (Optional) The URL of the Solana RPC endpoint. Defaults to mainnet if not specified.
+- `--keypair <KEYPAIR_PATH>`: Path to your keypair file.
+- `--multisig-pubkey <MULTISIG_PUBLIC_KEY>`: The public key of the multisig account.
+- `--voting-deadline <VOTING_DEADLINE>`: voting deadline for proposal ,should be i64 ,same as unix time format.
+- `--program-to-upgrade-id <PROGRAM_ID`: id of the program to be updated.
+- `--spill-address <SPILL_ADDRESS>` :adress to send execessive sol from upgrade
+- `buffer-address <BUFFER ADDRESS>`:account that holds new program code
 
