@@ -90,7 +90,7 @@ impl ProposalApprove {
         println!();
         println!(
             "{}",
-            "👀 You're about to vote on a proposal, please review the details:".yellow()
+            "👀 You're about to approve a proposal, please review the details:".yellow()
         );
         println!();
         println!("RPC Cluster URL:   {}", rpc_url);
