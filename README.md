@@ -321,7 +321,12 @@ Create a proposal to uprade program. This command allows any member of a multisi
 ```bash
 initiate-program-upgrade --rpc-url <RPC_URL> --keypair <KEYPAIR_PATH>  --multisig-pubkey <MULTISIG_PUBKEY> --voting-deadline <VOTING_DEADLINE> --spill-address <SPILL_ADDRESS> --program-to-upgrade-id <PROGRAM_ID> --buffer-address <BUFFER_ADDRESS>
 ```
-
+fortis allows temas to control program upgrades ,for that 
+- deploy your program first
+- change the upgrade authoirty to fortis multisig vault with ``` solana program set-upgrade-authority PROGRAM_ID --new-upgrade-authority FORTIS_MULTSIG_VAULT --skip-new-upgrade-authority-signer-check
+```
+- once the program auth has been set to fortis multisig ,write the program to a buffer with ```solana program write-buffer PATH_TO_DOT_SO file,the u can use initiate program upgrade to push the upgrade 
+```
 ### Parameters
 
 - `--rpc-url <RPC_URL>`: (Optional) The URL of the Solana RPC endpoint. Defaults to mainnet if not specified.

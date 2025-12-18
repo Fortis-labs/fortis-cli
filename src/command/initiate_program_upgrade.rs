@@ -21,6 +21,7 @@ use solana_sdk::{
     message::{v0::Message, VersionedMessage},
     pubkey::Pubkey,
     signature::Signer,
+    sysvar::instructions::Instructions,
     transaction::VersionedTransaction,
 };
 use solana_system_interface::program::ID as SYS_PROGRAM_ID;
@@ -150,14 +151,23 @@ impl InitiateProgramUpgrade {
 
         let vault_pda = get_vault_pda(&multisig, None);
 
+        let buffer_auth_update_ix = solana_loader_v3_interface::instruction::set_buffer_authority(
+            &buffer_address_id,
+            &transaction_creator,
+            &vault_pda.0,
+        );
         let instruction = upgrade(
             &program_to_upgrade,
             &buffer_address_id,
             &vault_pda.0,
             &spill_address_id,
         );
-        let upgrade_program_message =
-            VaultTransactionMessage::try_compile(&vault_pda.0, &[instruction], &[]).unwrap();
+        let upgrade_program_message = VaultTransactionMessage::try_compile(
+            &vault_pda.0,
+            &[buffer_auth_update_ix, instruction],
+            &[],
+        )
+        .unwrap();
 
         let message = Message::try_compile(
             &transaction_creator,
